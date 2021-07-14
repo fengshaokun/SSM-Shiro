@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="net.yikun.mapper.UserMapper">
+
+
+    <insert id="addUser" parameterType="User">
+
+        INSERT into t_user VALUES (NULL ,#{username},#{password},#{salt})
+
+    </insert>
+    <select id="getUserByName" resultType="net.yikun.pojo.User">
+
+        SELECT  user_id id,username,password,salt FROM t_user WHERE username=#{username}
+
+
+    </select>
+
+
+    <resultMap id="roleMap" type="Role">
+        <id column="role_id" property="roleId"/>
+        <result column="role_name" property="roleName"/>
+        <collection property="permissions" javaType="java.util.List" ofType="Permission" select="getAllPermissions" column="role_id">
+
+        </collection>
+
+
+    </resultMap>
+
+    <resultMap id="permissionMap" type="Permission">
+        <id property="permissionId" column="permission_id"/>
+        <result property="permissionName" column="permission_name"/>
+        <result property="parentId" column="parent_id"/>
+        <result property="url" column="url"/>
+    </resultMap>
+
+
+
+
+    <select id="getUserAll" resultMap="roleMap">
+            SELECT
+                tr.*
+            FROM
+                t_role tr
+            LEFT JOIN t_user_role tur ON tr.role_id = tur.t_role_id
+            WHERE
+                tur.t_user_id =#{userId}
+    </select>
+
+    <select id="getAllPermissions" resultMap="permissionMap">
+        SELECT
+            tp.*
+        FROM
+            t_permission tp
+        LEFT JOIN t_role_permission trp ON tp.permission_id = trp.t_permission_id
+        WHERE
+            trp.t_role_id =#{roleId}
+    </select>
+
+
+
+
+
+</mapper>

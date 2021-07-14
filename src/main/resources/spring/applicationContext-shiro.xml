@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+
+
+    <!--缓存管理器   当前电脑或者服务器的缓存，不推荐使用-->
+    <!--<bean id="cacheManager" class="org.apache.shiro.cache.MemoryConstrainedCacheManager"/>-->
+    <!--自己去看一下怎么配-->
+    <bean id="cacheManager" class="org.apache.shiro.cache.ehcache.EhCacheManager">
+
+    </bean>
+
+
+    <!--配置记住我管理器-->
+    <bean id="rememberMeManager" class="org.apache.shiro.web.mgt.CookieRememberMeManager">
+             <property name="cookie" ref="cookie"/>
+    </bean>
+    <!--配置记住我的cookie-->
+    <bean id="cookie" class="org.apache.shiro.web.servlet.SimpleCookie">
+        <property name="name" value="shiroRememberme"/>
+        <!--设置记住我的时间-->
+        <property name="maxAge" value="7200"/>
+    </bean>
+
+
+
+    <!--凭证匹配器-->
+    <bean id="credentialsMatcher" class="org.apache.shiro.authc.credential.HashedCredentialsMatcher">
+        <!--加密次数-->
+        <property name="hashIterations" value="2"/>
+        <!--加密算法-->
+        <property name="hashAlgorithmName" value="md5"/>
+    </bean>
+
+
+    <!--配置自定义realm-->
+    <bean id="myRealm" class="net.yikun.realm.MyRealm">
+        <!--凭证匹配器-->
+        <property name="credentialsMatcher" ref="credentialsMatcher"/>
+        <!--缓存-->
+        <property name="cachingEnabled" value="false"/>
+    </bean>
+
+
+    <!--安全管理器-->
+    <bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
+        <property name="realm" ref="myRealm"/>
+        <property name="cacheManager" ref="cacheManager"/>
+        <property name="rememberMeManager" ref="rememberMeManager"/>
+    </bean>
+
+
+    <!--SecurityUtils.setSecurityManager(securityManager)-->
+    <bean class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
+        <property name="staticMethod" value="org.apache.shiro.SecurityUtils.setSecurityManager"/>
+        <property name="arguments" ref="securityManager"/>
+    </bean>
+
+
+    <!--配置shiroweb过滤器-->
+    <bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">
+        <property name="securityManager" ref="securityManager"/>
+        <!--系统中没有用户时跳转登录页面-->
+        <property name="loginUrl" value="/login/toLogin"/>
+        <property name="filterChainDefinitions">
+            <value>
+                <!--匿名可用,没有参数-->
+                <!--/guest/**=anon-->
+                <!--登录可用，没有参数-->
+                <!--/vip/**=authc-->
+                <!--指定角色可用，有参数-->
+                <!--/admin/**=roles["admin"]-->
+                <!--指定权限可用，有参数-->
+                <!--/order/**=perms["user:*"]-->
+                <!--必须存在用户，登录操作不做检查，表示用户不一定需要通过认证，只要被shiro记住过登录状态就可以正常发起请求-->
+                <!--/**=user-->
+                /stu/**=anon
+                /login/**=anon
+                /js/**=anon
+                /css/**=anon
+                /**=user
+            </value>
+
+
+
+        </property>
+
+
+
+
+    </bean>
+
+
+
+
+
+
+</beans>
